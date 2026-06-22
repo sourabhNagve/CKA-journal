@@ -1,0 +1,48 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/part-of: travel-japan-platform
+    team.owner: travel-platform
+    workload.type: stateless
+  name: travel-jp-recommender
+  namespace: japan-tourism-platform
+spec:
+  replicas: 7
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: frontend
+      app.kubernetes.io/version: v1.0.0
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: frontend
+        app.kubernetes.io/version: v1.0.0
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          minDomains: 2
+          topologyKey: traveljp.io/deployment-domain
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: frontend
+              app.kubernetes.io/version: v1.0.0
+      containers:
+      - image: public.ecr.aws/nginx/nginx:mainline-trixie
+        name: backend
+        ports:
+        - containerPort: 80
+        resources: {}
+status: {}
+
+# topologyKey: traveljp.io/deployment-domain - This key is used to define the topology domain for spreading the pods across different nodes or zones. It ensures that the pods are distributed evenly based on the specified key, which can help improve availability and fault tolerance of the application.
+# example:- node labels can be set as follows:
+# kubectl label nodes node1 traveljp.io/deployment-domain=domain1
+# kubectl label nodes node2 traveljp.io/deployment-domain=domain1
+# kubectl label nodes node3 traveljp.io/deployment-domain=domain2
+# kubectl label nodes node4 traveljp.io/deployment-domain=domain2
+
+# some pods will be scheduled on node1 and node2 (domain1) and some pods will be scheduled on node3 and node4 (domain2) ensuring that the application is resilient to failures in one domain.

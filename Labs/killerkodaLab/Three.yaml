@@ -1,0 +1,36 @@
+# vi hero-reg-ingress.yaml
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hero-reg-ingress
+  namespace: class-1a
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - heroes.ua-academy.com
+    secretName: ua-heroes-tls
+  rules:
+  - host: heroes.ua-academy.com
+    http:
+      paths:
+      - path: /register
+        pathType: Prefix
+        backend:
+          service:
+            name: register-service
+            port:
+              number: 80
+      - path: /verify
+        pathType: Prefix
+        backend:
+          service:
+            name: verify-service
+            port:
+              number: 80
+
+# k apply -f hero-reg-ingress.yaml 
+# k get ingress - A
+# vi /etc/hosts and add the following line:
+# 127.0.0.1 heroes.ua-academy.com (you will get the ip of the iingress load balancer by running the command: k get ingress hero-reg-ingress -n class-1a)

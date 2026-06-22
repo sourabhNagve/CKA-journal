@@ -18,3 +18,6 @@ spec:
       port: 9000
 
 # k apply -f policy.yaml
+# k get networkpolicy -n fubar
+# k get svc -n fubar
+# k exec -n internal podname -- wget -qO- svc:9000 (this should work)
