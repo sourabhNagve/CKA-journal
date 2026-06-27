@@ -1,0 +1,22 @@
+# pyhton app in k8s cluster.
+# calculate the resources in the node which has the least resources available.
+# the node01 has :
+# CPU: 1000m
+# memory: 1803
+# system allocated - 10m cpu and 100 Mi memory
+# 1803 * 0.8 = 1442 Mi memory available
+# 1000 * 0.8 = 800m CPU available
+# 1442 Mi memory available - 100 Mi memory allocated = 1342 Mi memory available
+# 800m CPU available - 10m CPU allocated = 790m CPU available
+# Diving it between 3 pods, each pod will have:
+# 1342 / 3 = 447.33 Mi memory available per pod
+# 790 / 3 = 263.33m CPU available per pod
+
+# add the below resources to the pod spec in the deployment.yaml file. for both init containers and containers.
+resources:
+  requests:
+    memory: "447Mi"
+    cpu: "263m"
+limits:
+  memory: "447Mi"
+  cpu: "263m"

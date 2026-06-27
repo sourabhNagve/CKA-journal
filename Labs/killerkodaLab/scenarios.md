@@ -321,13 +321,192 @@ As a result, the kubelet refuses to run the Pod.
 Your task is to correct the manifest so that the kube-apiserver uses 20% of the node’s total CPU for both requests and limits .
 
 Q14)------------------------------------------------------
+CKA: Troubleshoot kube-apiserver etcd Connection
+📚 Official Kubernetes Documentation:
+
+Operating etcd clusters
+kube-apiserver Configuration
+Static Pods
+Troubleshooting Clusters
+🎯 Scenario
+After a disaster recovery restore of a Kubernetes control plane, the kube-apiserver fails to start on the master node.
+
+Cluster background:
+
+The etcd cluster is external and running in HA mode
+The disaster recovery restore process updated the kube-apiserver configuration
+kube-apiserver is currently configured to connect to etcd using port 2380
+Problem: The cluster is completely inaccessible. All kubectl commands fail with connection errors.
+
+❓ Task
+Determine why the kube-apiserver cannot communicate with etcd
+Fix the kube-apiserver configuration so it connects to the correct etcd endpoint
+Confirm that the kube-apiserver is running and the cluster is accessible
+
 Q15)-----------------------------------------------------
+🧠 CKA: Storage Migration for Local Volumes
+📚 Official Kubernetes Documentation:
+
+Storage Classes
+Volume Binding Mode
+Change Default StorageClass
+🏢 Context
+Your organization is migrating from Rancher's local-path storage to OpenEBS local storage for improved node-level volume management.
+
+The cluster currently has a default StorageClass named local-path , but developers need a new OpenEBS-backed StorageClass for upcoming workloads.
+
+You have been asked to prepare the cluster accordingly. The manifest you create must be stored at /internal/openebs-local-sc.yaml .
+
+❓ Question
+Create a new StorageClass named openebs-local that uses OpenEBS local provisioning with the following requirements:
+
+the provisioner should be openebs.io/local , the volumeBindingMode should be WaitForFirstConsumer
+the reclaimPolicy should be Delete
+allowVolumeExpansion should be set to true . Save the manifest at /internal/openebs-local-sc.yaml .
+After creating it, make openebs-local the new default StorageClass and ensure that the existing default StorageClass named local-path is no longer marked as default.
+
 Q16)-----------------------------------------------------
+🧠 CKA: Restore MySQL with Persistent Data
+📚 Kubernetes PersistentVolumes Documentation
+
+📚 Kubernetes Storage Classes Documentation
+
+🏢 Context
+You are working 🧑‍💻 in your company's platform team.
+
+Your platform team manages several mission-critical workloads in Kubernetes, including the company's customer-account MySQL database, which runs in the mysql namespace.
+
+Earlier today, a junior engineer accidentally deleted the MySQL Deployment during routine maintenance. Fortunately, the database data is not lost — the underlying PersistentVolume (PV) still exists and is set to Retain, meaning the stored data remains intact.
+
+Your task is to restore the MySQL Deployment and ensure that it continues to use the existing persistent data so that customer services depending on this database experience no data loss.
+
+❓ Task
+A PersistentVolume containing the MySQL data already exists and must be reused.A hostPath directory already created on node01 where the MySQL data is stored. (Check PV Configuration)
+
+Create a PersistentVolumeClaim (PVC) named mysql-pvc in the mysql namespace with:
+
+AccessMode: ReadWriteOnce
+Storage Request: 250Mi
+Update the MySQL Deployment manifest stored at:
+
+~/mysql-deploy.yaml
+Modify the Deployment so that it mounts the PVC you created (mysql-pvc ) at the MySQL data directory: /home/data
+
+Apply the updated Deployment to the cluster.
+
+Validate that:
+
+The Deployment is running
+The Pod is bound to the existing PV via the PVC
+MySQL is stable and ready
+
+
 Q17)-----------------------------------------------------
+🛒 CKA Exam Question - PriorityClass Configuration
+📚 Additional Resources
+Kubernetes Pod Priority
+PriorityClass API Reference
+Scheduling Best Practices
+📖 Real-Life Context
+Your organization, AcmeRetail, is preparing for its annual Holiday Flash Sale, a period when customer traffic increases sharply across all services.
+
+Several engineering teams have already created custom PriorityClasses to ensure that their mission-critical microservices continue to receive scheduling preference during heavy cluster load.
+
+A Deployment named acme-log-forwarder , running in the priority namespace, is responsible for collecting and forwarding transaction logs to the central SIEM platform during the event.
+
+🎯 Your Task
+1. Identify the highest existing user-defined PriorityClass value in the cluster.
+
+2. Create a new PriorityClass named high-priority whose value is one less than the highest user-defined PriorityClass.
+The PriorityClass must include:
+
+globalDefault: false
+preemptionPolicy: PreemptLowerPriority
+3. Update the Deployment acme-log-forwarder in the priority namespace so that its Pod spec uses this new PriorityClass.
+
+
 Q18)-----------------------------------------------------
+🧠 CKA: PodAffinity - Backend Near Frontend
+📚 Kubernetes PodAffinity Documentation
+
+🏢 Context
+You are working 🧑‍💻 in your company's application infrastructure team.
+A nara-frontend Deployment is already running in the nara namespace with 3 replicas on the controlplane node.
+
+Your backend team needs to ensure that backend Pods are always scheduled on the same nodes as frontend Pods for optimal performance and reduced latency.
+
+❓ Question
+A Deployment named nara-frontend is already running in the nara namespace with 3 replicas.
+
+A backend Deployment manifest is stored at:
+
+/nara.io/nara-backend.yaml
+Update this file to add required PodAffinity so that all nara-backend Pods MUST be scheduled on the same node as nara-frontend Pods, using:
+
+requiredDuringSchedulingIgnoredDuringExecution
+topologyKey: nara.io/zone
+After updating the manifest, apply it to create the backend Deployment.
+
 Q19)-----------------------------------------------------
 Q20)------------------------------------------------------
+🧮 Configure Pod Resource Management for Python ML Application
+📚 Official Kubernetes Documentation: Managing Resources for Containers
+
+You are managing a Python Machine Learning web application running in a Kubernetes cluster. The application is currently deployed without proper resource configuration, which could lead to instability and resource contention.
+
+🎯 Your Tasks:
+Task 1: Scale Down the Deployment
+Scale down the python-webapp deployment in the python-ml-ns namespace to 0 replicas to safely make configuration changes.
+
+Task 2: Calculate Resource Allocation
+Important: Before editing the deployment, you need to calculate the correct resource values.
+
+Requirements:
+
+The deployment will run 3 pods
+Resources must be divided evenly across all 3 pods
+Add 20% overhead to avoid node instability (reserve 20% for system processes)
+Both init containers and main containers must have identical resource requests and limits.
+Task 3: Edit the Deployment
+Edit the python-webapp deployment and add resource requests and limits to both the init container (init-setup ) and the main container (python-app ).
+
+After successfully editing the deployment, scale it back to 3 replicas.
+
+Verify that all 3 pods are in Running state and have the correct resource configuration:
+
 Q21)------------------------------------------------------
+🧠 CKA: PersistentVolumeClaim with Dynamic Provisioning
+📚 Official Kubernetes Documentation:
+
+Persistent Volumes
+Storage Classes
+Configure a Pod to Use a PersistentVolumeClaim
+Dynamic Volume Provisioning
+🔧 Context
+You are working 🧑‍💻 on preparing a workload that performs local image processing for your company. The operations namespace already exists, and a Deployment manifest for the application has been created at /src/k8s/image-processor.yaml .
+
+This Deployment is functional but currently does not include any persistent storage. The application needs a cache directory at /cache to store temporary processing results that should persist across pod restarts.
+
+The cluster uses the Rancher Local Path Provisioner with a StorageClass named local-path , which supports dynamic provisioning of local storage on the worker nodes.
+
+❓ Task
+Complete the following tasks to add persistent storage to the image processor application:
+
+Create a PersistentVolumeClaim named processor-cache in the operations namespace that:
+
+Request 1Gi of storage with ReadWriteOnce access.
+Uses the local-path StorageClass
+Is dynamically provisioned (no manual PV creation needed)
+Modify the existing Deployment manifest at /src/k8s/image-processor.yaml :
+
+Add a volume that references the PVC processor-cache ; the volume name should be cache-storage .
+Add a volumeMount to mount the PVC at /cache inside the container
+Do not change any other part of the Deployment
+Apply your changes and verify:
+
+The PVC becomes Bound
+A dynamically provisioned PV is created automatically
+The running pod mounts the volume at /cache
 Q22)-----------------------------------------------------
 Q23-------------------------------------------------------
 Q24)------------------------------------------------------
