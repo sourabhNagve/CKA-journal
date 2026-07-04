@@ -507,6 +507,8 @@ Apply your changes and verify:
 The PVC becomes Bound
 A dynamically provisioned PV is created automatically
 The running pod mounts the volume at /cache
+You can create and read a file inside /cache from the pod
+
 Q22)-----------------------------------------------------
 Q23-------------------------------------------------------
 Q24)------------------------------------------------------

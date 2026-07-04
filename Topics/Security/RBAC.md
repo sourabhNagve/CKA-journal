@@ -27,3 +27,5 @@ Avoid granting these unless necessary:
 | escalate verb               | Create roles with more rights than you have kubernetes          |
 | bind verb                   | Bind to roles you don't have kubernetes                         |
 | impersonate verb            | Gain rights of other users kubernetes                           |
+
+
