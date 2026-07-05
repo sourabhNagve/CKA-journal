@@ -14,7 +14,7 @@ Create a new NetworkPolicy named allow-egress-or-logic in the existing namespace
 <details>
 <summary>Q1 Solution</summary>
 
-text
+```yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -54,24 +54,15 @@ spec:
       port: 53
     - protocol: UDP
       port: 53
-Explanation
-metadata.namespace: restricted means the NetworkPolicy is created in the restricted namespace.
+```
 
-podSelector: {} means the policy applies to all Pods in the restricted namespace.
+### Explanation
 
-policyTypes: [Egress] means only outbound traffic is controlled.
-
-The first egress rule allows traffic only to:
-
-Pods with label app=database in namespace data, or
-
-Pods with label role=cache in namespace cache,
-
-and only on TCP port 5432.
-
-The second egress rule allows DNS traffic only to kube-dns Pods in the kube-system namespace on port 53 using both TCP and UDP.
-
-Because no other egress rules are defined, all other outbound traffic is denied.
+- `metadata.namespace: restricted` means the policy is created in the `restricted` namespace.
+- `podSelector: {}` means the policy applies to all Pods in the `restricted` namespace.
+- `policyTypes: [Egress]` means only outgoing traffic is controlled.
+- The first egress rule allows traffic to database Pods in `data` or cache Pods in `cache` only on TCP 5432.
+- The second egress rule allows DNS only to `kube-dns` in `kube-system` on TCP/UDP 53.
 
 </details>
 
