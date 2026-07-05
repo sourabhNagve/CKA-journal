@@ -10,7 +10,60 @@ Create a new NetworkPolicy named allow-egress-or-logic in the existing namespace
   - DNS must be allowed, but only to kube-dns Pods in the kube-system namespace, and only on UDP/TCP port 53
   - Pods must not be able to send traffic to any other Pods, namespaces, or external destinations
   - Pods that do not send traffic on port 5432 must not be allowed egress access
+<details>
+<summary>Solution</summary>
+```
+apiVersion: networking.k8s.io/v1 
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-or-logic
+  namespace: restricted
+spec:
+  podSelector: {} 
+  policyTypes:
+  - Egress 
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: data
+    - podSelector:
+        matchLabels:
+          app: database
+    - namespaceSelector:
+        matchLabels:
+          name: cache
+    - podSelector:
+        matchLabels:
+          role: cache 
+    ports:
+    - protocol: TCP
+      port: 5432
 
+  - to: # 
+    - namespaceSelector:
+        matchLabels:
+           kubernetes.io/metadata.name: kube-system
+    - podSelector:
+        matchLabels:
+         k8s-app: kube-dns
+    ports: 
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+
+
+  # namespace field in the metadate means this policy will be applied to all pods in the restricted namespace.
+  # spec():
+  #   podSelector: {} means this policy will be applied to all pods in the restricted namespace.
+  # policyTypes: Egress means this policy will only apply to outgoing traffic from the pods in the restricted namespace.
+  # egress: defines the rules for outgoing traffic. In this case, there are two rules:
+  #   - The first rule allows outgoing traffic to pods in the data namespace with the label app: database, and to pods in the cache namespace with the label role: cache, on TCP port 5432.
+  #   - The second rule allows outgoing traffic to pods in the kube-system namespace with the label k8s-app: kube-dns, on TCP and UDP port 53.
+
+```
+</details>
 
 
 Q2) Context
