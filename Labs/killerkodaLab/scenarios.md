@@ -1,18 +1,23 @@
-Q1)
+---
 
-Context  
+# Q1
+
+## Context
+
 You are the security engineer for a microservices platform. The application pods in the restricted namespace need controlled outbound access to backend services.
+
+## Question
 
 Create a new NetworkPolicy named allow-egress-or-logic in the existing namespace restricted. The NetworkPolicy should allow outgoing (egress) traffic from Pods in namespace restricted only if all of the following conditions are met:
 
-- Traffic is destined to Pods with label app=database in namespace data OR traffic is destined to Pods with label role=cache in namespace cache
-- Traffic is directed to TCP port 5432
-- DNS must be allowed, but only to kube-dns Pods in the kube-system namespace, and only on UDP/TCP port 53
+- Traffic is destined to Pods with label `app=database` in namespace `data` OR traffic is destined to Pods with label `role=cache` in namespace `cache`
+- Traffic is directed to TCP port `5432`
+- DNS must be allowed, but only to kube-dns Pods in the kube-system namespace, and only on UDP/TCP port `53`
 - Pods must not be able to send traffic to any other Pods, namespaces, or external destinations
-- Pods that do not send traffic on port 5432 must not be allowed egress access
+- Pods that do not send traffic on port `5432` must not be allowed egress access
 
 <details>
-<summary>Q1 Solution</summary>
+<summary><strong>Q1 Solution</strong></summary>
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -56,22 +61,19 @@ spec:
       port: 53
 ```
 
-### Explanation
-
-- `metadata.namespace: restricted` means the policy is created in the `restricted` namespace.
-- `podSelector: {}` means the policy applies to all Pods in the `restricted` namespace.
-- `policyTypes: [Egress]` means only outgoing traffic is controlled.
-- The first egress rule allows traffic to database Pods in `data` or cache Pods in `cache` only on TCP `5432`.
-- The second egress rule allows DNS only to `kube-dns` in `kube-system` on TCP/UDP `53`.
-
 </details>
 
-Q2)
+---
 
-Context  
+# Q2
+
+## Context
+
 You are working on an IoT Sensor API Platform that experiences variable traffic patterns throughout the day. The platform needs to scale automatically based on resource utilization to maintain performance while optimizing costs.
 
 A Deployment named `sensor-api` is already running in the `iot-sys` namespace with 12 replicas. The metrics-server has been installed and configured for you.
+
+## Question
 
 You must configure autoscaling for this Deployment by creating an HPA called `sensor-hpa` that can scale between 2 and 8 replicas.
 
@@ -80,7 +82,7 @@ The HPA should use both CPU and memory utilization, with each metric targeting 8
 Adding `stabilizationWindowSeconds: 5` in the HPA ensures the replicas scale down smoothly from 12 to 2, since the 12 pods were running unnecessarily without traffic.
 
 <details>
-<summary>Q2 Solution</summary>
+<summary><strong>Q2 Solution</strong></summary>
 
 ```bash
 kubectl get deployments.apps -n iot-sys sensor-api
@@ -125,9 +127,12 @@ kubectl apply -f hpa.yaml
 
 </details>
 
-Q3)
+---
 
-Context  
+# Q3
+
+## Context
+
 U.A. High School is deploying a public Hero Registration Portal with two backend services:
 
 - `/register` → `register-service` on port 80
@@ -137,7 +142,8 @@ The portal must be accessible at: `heroes.ua-academy.com`
 
 Izuku Midoriya wants all hero data protected with TLS.
 
-Task:  
+## Question
+
 Create an Ingress named `hero-reg-ingress` in namespace `class-1a` that:
 
 - Uses TLS termination with secret `ua-heroes-tls`
@@ -150,7 +156,7 @@ Create an Ingress named `hero-reg-ingress` in namespace `class-1a` that:
   - `curl -k -v https://heroes.ua-academy.com/verify | jq`
 
 <details>
-<summary>Q3 Solution</summary>
+<summary><strong>Q3 Solution</strong></summary>
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -190,13 +196,10 @@ kubectl get ingress -n class-1a
 kubectl get ingress hero-reg-ingress -n class-1a
 ```
 
-Add the Ingress IP to `/etc/hosts`:
-
 ```bash
+# Add to /etc/hosts
 <INGRESS-IP> heroes.ua-academy.com
 ```
-
-Test:
 
 ```bash
 curl -k -v https://heroes.ua-academy.com/register | jq
@@ -205,9 +208,12 @@ curl -k -v https://heroes.ua-academy.com/verify | jq
 
 </details>
 
-Q4)
+---
 
-Context  
+# Q4
+
+## Context
+
 The Japan Railway (JR) has deployed three microservices in the `jp-bullet-train-app-prod` namespace:
 
 - `available` - Real-time train availability
@@ -218,9 +224,10 @@ Your task is to expose these services externally using the Kubernetes Gateway AP
 
 Please wait 1 minute for MetalLoadBalancer to set up the gateway.
 
-Your Tasks:
+## Question
 
-Task 1: Create the Gateway  
+### Task 1: Create the Gateway
+
 Create a Gateway named `bullet-train-gateway` in namespace `jp-bullet-train-gtw` with:
 
 - `gatewayClassName: nginx`
@@ -230,7 +237,8 @@ Create a Gateway named `bullet-train-gateway` in namespace `jp-bullet-train-gtw`
 - TLS mode: `Terminate`
 - TLS certificate secret: `bullet-train-tls`
 
-Task 2: Create the HTTPRoute  
+### Task 2: Create the HTTPRoute
+
 Create an HTTPRoute named `bullet-train-route` in namespace `jp-bullet-train-gtw` with:
 
 - Parent Gateway: `bullet-train-gateway`
@@ -239,11 +247,12 @@ Create an HTTPRoute named `bullet-train-route` in namespace `jp-bullet-train-gtw
 - `/books` → service `books` in namespace `jp-bullet-train-app-prod`
 - `/travellers` → service `travellers` in namespace `jp-bullet-train-app-prod`
 
-Task 3: Configure Local DNS  
+### Task 3: Configure Local DNS
+
 Add `bullet.train.io` in `/etc/hosts` pointing to the Gateway LoadBalancer IP.
 
 <details>
-<summary>Q4 Solution</summary>
+<summary><strong>Q4 Solution</strong></summary>
 
 ```yaml
 apiVersion: gateway.networking.k8s.io/v1
@@ -310,13 +319,10 @@ kubectl get gateway -n jp-bullet-train-gtw
 kubectl get httproute -n jp-bullet-train-gtw
 ```
 
-Add the Gateway IP to `/etc/hosts`:
-
 ```bash
+# Add to /etc/hosts
 <GATEWAY-IP> bullet.train.io
 ```
-
-Test:
 
 ```bash
 curl -sk https://bullet.train.io/available | jq
@@ -326,10 +332,15 @@ curl -sk https://bullet.train.io/travellers | jq
 
 </details>
 
-Q5)
+---
 
-Context  
+# Q5
+
+## Context
+
 You are working on securing traffic in Kubernetes.
+
+## Question
 
 Create a new NetworkPolicy named `allow-port-from-namespace` in the existing namespace `fubar`.
 
@@ -341,7 +352,7 @@ The NetworkPolicy should allow incoming traffic to Pods in namespace `fubar` onl
 - Pods from namespaces other than `internal` must not be allowed access
 
 <details>
-<summary>Q5 Solution</summary>
+<summary><strong>Q5 Solution</strong></summary>
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -365,23 +376,28 @@ spec:
 
 </details>
 
-Q6)
+---
 
-Context  
+# Q6
+
+## Context
+
 You are the security engineer for a microservices platform running in Kubernetes. The security team has identified that the API service in the isolated namespace requires strict access controls.
+
+## Question
 
 Create a new NetworkPolicy named `allow-multi-pod-ingress` in the existing namespace `isolated`.
 
 The NetworkPolicy should allow incoming traffic to Pods with label `app=api` in namespace `isolated` only if ALL of the following conditions are met:
 
-- Traffic originates from Pods with label `app=frontend` & `role=proxy`
+- Traffic originates from Pods with label `app=frontend` and `role=proxy`
 - Traffic is directed to TCP port `7000`
 - Pods that do not listen on port `7000` must not be accessible
 - Pods other than those with label `app=api` must not be allowed access
 - Pods that do not match the above source Pod labels must not be allowed access
 
 <details>
-<summary>Q6 Solution</summary>
+<summary><strong>Q6 Solution</strong></summary>
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -408,16 +424,21 @@ spec:
 
 </details>
 
-Q7)
+---
 
-Context  
+# Q7
+
+## Context
+
 You are the platform engineer responsible for implementing centralized logging for your organization's applications. The web application team has deployed `web-app` in the `production` namespace, and it generates logs to `/var/log/app/app.log`.
 
 Your task is to add a Fluentd sidecar container that will collect and forward these logs to your centralized logging infrastructure. The sidecar pattern allows you to add logging functionality without modifying the application code.
 
 An existing Deployment named `web-app` is running in the namespace `production`.
 
-Task: Update the existing Deployment to add a sidecar container that follows the Fluentd sidecar logging pattern.
+## Question
+
+Update the existing Deployment to add a sidecar container that follows the Fluentd sidecar logging pattern.
 
 Requirements:
 
@@ -433,7 +454,7 @@ Requirements:
 - Do not change existing labels, selectors, or replica counts
 
 <details>
-<summary>Q7 Solution</summary>
+<summary><strong>Q7 Solution</strong></summary>
 
 ```yaml
 apiVersion: apps/v1
@@ -480,9 +501,12 @@ spec:
 
 </details>
 
-Q8)
+---
 
-Context  
+# Q8
+
+## Context
+
 You are working in your company's data platform team.
 
 Your company operates a production-grade MongoDB database on Kubernetes. The StatefulSet is named `mongodb-users-db` with 2 replicas in the `database-services` namespace.
@@ -493,7 +517,8 @@ A single node failure could severely impact or completely take down the MongoDB 
 
 To comply with production standards, the database team requires mandatory pod anti-affinity so that MongoDB replicas MUST run on different failure domains (zones).
 
-Question  
+## Question
+
 A StatefulSet manifest for MongoDB is stored at:
 
 `/mongodb/mongodb-stateful.yaml`
@@ -509,7 +534,7 @@ Your task:
 - Apply the updated manifest to create the StatefulSet with anti-affinity rules
 
 <details>
-<summary>Q8 Solution</summary>
+<summary><strong>Q8 Solution</strong></summary>
 
 ```yaml
 apiVersion: apps/v1
@@ -561,16 +586,20 @@ spec:
 
 </details>
 
-Q9)
+---
 
-Context  
+# Q9
+
+## Context
+
 You are working on integrating GitLab CI/CD with your Kubernetes cluster.
 
 The CI/CD pipeline needs programmatic access to manage pods, deployments, and jobs across the cluster. A ServiceAccount named `gitlab-cicd-sa` has already been created in the `gitlab-cicd` namespace, and a test pod named `gitlab-cicd-nginx` is running to verify your configuration.
 
 Your task is to set up proper RBAC permissions and generate a secure token for API authentication.
 
-Question  
+## Question
+
 You need to configure RBAC and generate an API access token for the GitLab CI/CD integration.
 
 Create a ClusterRole named `gitlab-cicd-role` that grants the verbs `get`, `list`, `watch`, `create`, `patch`, `delete` on the resources `pods`, `deployments`, and `jobs`.
@@ -588,7 +617,7 @@ Do not delete or modify any existing cluster resources other than what is requir
 Paste the token you generated and view its details on JWT.
 
 <details>
-<summary>Q9 Solution</summary>
+<summary><strong>Q9 Solution</strong></summary>
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -623,9 +652,12 @@ kubectl create token gitlab-cicd-sa -n gitlab-cicd --duration=2h
 
 </details>
 
-Q10)
+---
 
-Context  
+# Q10
+
+## Context
+
 You are working on a Japan Tourism Platform that needs high availability across multiple deployment domains (zones).
 
 A Deployment manifest is already stored at:
@@ -634,7 +666,8 @@ A Deployment manifest is already stored at:
 
 The Deployment has 7 replicas that need to be distributed evenly across nodes with different topology domains.
 
-Question  
+## Question
+
 Edit the Deployment to add a topologySpreadConstraints section that satisfies the following requirements:
 
 - Minimum required number of domains (zones) for balancing: 2
@@ -649,7 +682,7 @@ Edit the Deployment to add a topologySpreadConstraints section that satisfies th
 - After editing, apply the Deployment and verify the Pod distribution
 
 <details>
-<summary>Q10 Solution</summary>
+<summary><strong>Q10 Solution</strong></summary>
 
 ```yaml
 apiVersion: apps/v1
@@ -694,14 +727,18 @@ status: {}
 
 </details>
 
-Q11)
+---
 
-Context  
+# Q11
+
+## Context
+
 You are managing a Kubernetes cluster where application workloads have varying resource requirements over time. A deployment named `app-deployment` exists in the `vpa-demo` namespace with a container named `application`. Currently, the resources are manually configured, but you need to implement automatic resource optimization using Vertical Pod Autoscaler (VPA).
 
 The VPA should monitor actual resource usage and automatically adjust both CPU and memory requests and limits, while ensuring they stay within safe operational boundaries.
 
-Question  
+## Question
+
 Create a VerticalPodAutoscaler resource named `app-vpa` in the `vpa-demo` namespace that manages the `app-deployment` deployment.
 
 Requirements:
@@ -714,12 +751,12 @@ Requirements:
     - CPU: 100m
     - Memory: 128Mi
   - Maximum bounds:
-    - CPU: 2 (2 cores)
+    - CPU: 2
     - Memory: 2Gi
 - The VPA should control both `RequestsAndLimits` for the container
 
 <details>
-<summary>Q11 Solution</summary>
+<summary><strong>Q11 Solution</strong></summary>
 
 ```yaml
 apiVersion: autoscaling.k8s.io/v1
@@ -751,14 +788,18 @@ spec:
 
 </details>
 
-Q12)
+---
 
-Context  
+# Q12
+
+## Context
+
 You are working as a Platform Engineer managing GPU workloads.
 
 Your team noticed that a critical Deployment is scheduling most of its 10 replicas on a single node, causing resource imbalance. Both cluster nodes have GPU labels, but the scheduler needs guidance to prefer distributing Pods across both nodes.
 
-Question  
+## Question
+
 A Deployment manifest is provided at:
 
 `/app/app.yaml`
@@ -777,17 +818,17 @@ The Deployment runs 10 replicas.
 
 Your Tasks
 
-- Edit only the file `/app/app.yaml`.
+- Edit only the file `/app/app.yaml`
 - Add NodeAffinity using `preferredDuringSchedulingIgnoredDuringExecution` so that the scheduler prefers to place Pods on nodes that have both labels:
   - `gpu.vendor = nvidia`
   - `gpu.count = 1`
-- Use a weight of 50 for the preference.
-- Ensure the Deployment remains eligible to run its Pods across both nodes based on preferred affinity.
-- Do not change the number of replicas.
-- Apply the updated Deployment manifest.
+- Use a weight of 50 for the preference
+- Ensure the Deployment remains eligible to run its Pods across both nodes based on preferred affinity
+- Do not change the number of replicas
+- Apply the updated Deployment manifest
 
 <details>
-<summary>Q12 Solution</summary>
+<summary><strong>Q12 Solution</strong></summary>
 
 ```yaml
 apiVersion: apps/v1
@@ -831,19 +872,24 @@ spec:
 
 </details>
 
-Q13)
+---
 
-Context  
+# Q13
+
+## Context
+
 You are troubleshooting a cluster where the control plane is not healthy. On the node `controlplane`, the kube-apiserver process keeps failing to start.
 
 Upon investigation, you discover that the static Pod manifest located under `/etc/kubernetes/manifests/kube-apiserver.yaml` contains incorrect CPU requests and limits, which exceed the node's total capacity.
 
 As a result, the kubelet refuses to run the Pod.
 
-Your task is to correct the manifest so that the kube-apiserver uses 20% of the node’s total CPU for both requests and limits.
+## Question
+
+Correct the manifest so that the kube-apiserver uses 20% of the node’s total CPU for both requests and limits.
 
 <details>
-<summary>Q13 Solution</summary>
+<summary><strong>Q13 Solution</strong></summary>
 
 ```text
 # check total cpu available with nproc or lscpu
@@ -862,9 +908,12 @@ crictl ps -a
 
 </details>
 
-Q14)
+---
 
-Context  
+# Q14
+
+## Context
+
 After a disaster recovery restore of a Kubernetes control plane, the kube-apiserver fails to start on the master node.
 
 Cluster background:
@@ -872,9 +921,10 @@ Cluster background:
 - The etcd cluster is external and running in HA mode
 - The disaster recovery restore process updated the kube-apiserver configuration
 - kube-apiserver is currently configured to connect to etcd using port 2380
-- Problem: The cluster is completely inaccessible. All kubectl commands fail with connection errors.
+- Problem: The cluster is completely inaccessible. All kubectl commands fail with connection errors
 
-Question  
+## Question
+
 Determine why the kube-apiserver cannot communicate with etcd.
 
 Fix the kube-apiserver configuration so it connects to the correct etcd endpoint.
@@ -882,7 +932,7 @@ Fix the kube-apiserver configuration so it connects to the correct etcd endpoint
 Confirm that the kube-apiserver is running and the cluster is accessible.
 
 <details>
-<summary>Q14 Solution</summary>
+<summary><strong>Q14 Solution</strong></summary>
 
 ```text
 # apiserver must use etcd client port 2379, not peer port 2380
@@ -898,16 +948,20 @@ kubectl get nodes
 
 </details>
 
-Q15)
+---
 
-Context  
+# Q15
+
+## Context
+
 Your organization is migrating from Rancher's local-path storage to OpenEBS local storage for improved node-level volume management.
 
 The cluster currently has a default StorageClass named `local-path`, but developers need a new OpenEBS-backed StorageClass for upcoming workloads.
 
 You have been asked to prepare the cluster accordingly. The manifest you create must be stored at `/internal/openebs-local-sc.yaml`.
 
-Question  
+## Question
+
 Create a new StorageClass named `openebs-local` that uses OpenEBS local provisioning with the following requirements:
 
 - the provisioner should be `openebs.io/local`
@@ -919,7 +973,7 @@ Create a new StorageClass named `openebs-local` that uses OpenEBS local provisio
 After creating it, make `openebs-local` the new default StorageClass and ensure that the existing default StorageClass named `local-path` is no longer marked as default.
 
 <details>
-<summary>Q15 Solution</summary>
+<summary><strong>Q15 Solution</strong></summary>
 
 ```yaml
 apiVersion: storage.k8s.io/v1
@@ -936,9 +990,12 @@ volumeBindingMode: WaitForFirstConsumer
 
 </details>
 
-Q16)
+---
 
-Context  
+# Q16
+
+## Context
+
 You are working in your company's platform team.
 
 Your platform team manages several mission-critical workloads in Kubernetes, including the company's customer-account MySQL database, which runs in the mysql namespace.
@@ -947,10 +1004,11 @@ Earlier today, a junior engineer accidentally deleted the MySQL Deployment durin
 
 Your task is to restore the MySQL Deployment and ensure that it continues to use the existing persistent data so that customer services depending on this database experience no data loss.
 
-Task  
+## Question
+
 A PersistentVolume containing the MySQL data already exists and must be reused. A hostPath directory already created on node01 where the MySQL data is stored. (Check PV Configuration)
 
-Create a PersistentVolumeClaim (PVC) named mysql-pvc in the mysql namespace with:
+Create a PersistentVolumeClaim (PVC) named `mysql-pvc` in the `mysql` namespace with:
 
 - AccessMode: ReadWriteOnce
 - Storage Request: 250Mi
@@ -970,7 +1028,7 @@ Validate that:
 - MySQL is stable and ready
 
 <details>
-<summary>Q16 Solution</summary>
+<summary><strong>Q16 Solution</strong></summary>
 
 ```yaml
 apiVersion: apps/v1
@@ -1026,26 +1084,32 @@ spec:
 
 </details>
 
-Q17)
+---
 
-Context  
+# Q17
+
+## Context
+
 Your organization, AcmeRetail, is preparing for its annual Holiday Flash Sale, a period when customer traffic increases sharply across all services.
 
 Several engineering teams have already created custom PriorityClasses to ensure that their mission-critical microservices continue to receive scheduling preference during heavy cluster load.
 
 A Deployment named `acme-log-forwarder`, running in the `priority` namespace, is responsible for collecting and forwarding transaction logs to the central SIEM platform during the event.
 
-Your Task
+## Question
 
 1. Identify the highest existing user-defined PriorityClass value in the cluster.
 2. Create a new PriorityClass named `high-priority` whose value is one less than the highest user-defined PriorityClass.
-   The PriorityClass must include:
-   - `globalDefault: false`
-   - `preemptionPolicy: PreemptLowerPriority`
+
+The PriorityClass must include:
+
+- `globalDefault: false`
+- `preemptionPolicy: PreemptLowerPriority`
+
 3. Update the Deployment `acme-log-forwarder` in the `priority` namespace so that its Pod spec uses this new PriorityClass.
 
 <details>
-<summary>Q17 Solution</summary>
+<summary><strong>Q17 Solution</strong></summary>
 
 ```bash
 kubectl create priorityclass high-priority --value=999999 --global-default=false --preemption-policy=PreemptLowerPriority
@@ -1063,16 +1127,20 @@ spec:
 
 </details>
 
-Q18)
+---
 
-Context  
+# Q18
+
+## Context
+
 You are working in your company's application infrastructure team.
 
 A `nara-frontend` Deployment is already running in the `nara` namespace with 3 replicas on the controlplane node.
 
 Your backend team needs to ensure that backend Pods are always scheduled on the same nodes as frontend Pods for optimal performance and reduced latency.
 
-Question  
+## Question
+
 A Deployment named `nara-frontend` is already running in the `nara` namespace with 3 replicas.
 
 A backend Deployment manifest is stored at:
@@ -1087,7 +1155,7 @@ Update this file to add required PodAffinity so that all `nara-backend` Pods MUS
 After updating the manifest, apply it to create the backend Deployment.
 
 <details>
-<summary>Q18 Solution</summary>
+<summary><strong>Q18 Solution</strong></summary>
 
 ```yaml
 affinity:
@@ -1103,3 +1171,5 @@ affinity:
 ```
 
 </details>
+
+---
