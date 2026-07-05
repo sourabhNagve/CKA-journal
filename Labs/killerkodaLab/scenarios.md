@@ -52,17 +52,17 @@ spec:
       port: 53
     - protocol: UDP
       port: 53
-
-
-  # namespace field in the metadate means this policy will be applied to all pods in the restricted namespace.
-  # spec():
-  #   podSelector: {} means this policy will be applied to all pods in the restricted namespace.
-  # policyTypes: Egress means this policy will only apply to outgoing traffic from the pods in the restricted namespace.
-  # egress: defines the rules for outgoing traffic. In this case, there are two rules:
-  #   - The first rule allows outgoing traffic to pods in the data namespace with the label app: database, and to pods in the cache namespace with the label role: cache, on TCP port 5432.
-  #   - The second rule allows outgoing traffic to pods in the kube-system namespace with the label k8s-app: kube-dns, on TCP and UDP port 53.
-
 ```
+---
+
+   namespace field in the metadate means this policy will be applied to all pods in the restricted namespace.
+   spec():
+     podSelector: {} means this policy will be applied to all pods in the restricted namespace.
+   policyTypes: Egress means this policy will only apply to outgoing traffic from the pods in the restricted namespace.
+   egress: defines the rules for outgoing traffic. In this case, there are two rules:
+     - The first rule allows outgoing traffic to pods in the data namespace with the label app: database, and to pods in the cache namespace with the label role: cache, on TCP port 5432.
+     - The second rule allows outgoing traffic to pods in the kube-system namespace with the label k8s-app: kube-dns, on TCP and UDP port 53.
+
 </details>
 
 
