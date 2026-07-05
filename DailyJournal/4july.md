@@ -19,3 +19,23 @@ example :curl -s --header "Authorization: Bearer $TOKEN" \
 
   **NOTE
   Not every Pod actually needs a token. If the application never talks to the Kubernetes API, best practice is often to disable automatic mounting of the service account token to reduce risk
+
+  ------------------------------------------------
+
+  We use a deny-all ingress and egress NetworkPolicy as the default security boundary, then add explicit allow rules for the traffic the application actually needs.
+
+  -------------------------------------------------
+  debugging dns troubleshooting
+   Pod debug-pod in namespace default cannot resolve the service my-service.production.svc.cluster.local
+ - kubectl get svc -n production my-service (Check whether the Service exists in the target namespace) 
+ - kubectl get endpoints -n production my-service (Check whether the Service has endpoints)
+ - nslookup my-service.production.svc.cluster.local (Test DNS from inside the failing Pod or a debug Pod)
+ - Check the Pod’s /etc/resolv.conf to confirm the search domains and nameserver are correct
+ - kubectl -n kube-system get pods -l k8s-app=kube-dns
+ - kubectl -n kube-system logs -l k8s-app=kube-dns
+ -If DNS looks fine, check whether a NetworkPolicy is blocking UDP/TCP port 53 to CoreDNS. Egress-deny policies commonly break DNS resolution
+
+
+[  A clean troubleshooting order is: Service name → Endpoints → Pod DNS config → CoreDNS health → NetworkPolicy ] 
+
+

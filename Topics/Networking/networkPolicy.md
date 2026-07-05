@@ -1,0 +1,1 @@
+We use a deny-all ingress and egress NetworkPolicy as the default security boundary, then add explicit allow rules for the traffic the application actually needs.

@@ -22,3 +22,7 @@ egrep "a+" file.txt # search for one or more occurrences of 'a' in a file, no ne
 # Difference between grep in the beginning and grep in the middle of a pipeline is that grep in the beginning reads the entire file into memory, while grep in the middle of a pipeline reads the input line by line. 
 # so if you are searching for a pattern in a large file, it is better to use grep in the middle of a pipeline, because it will use less memory. 
 # and if you are searching for a pattern in a small file, it is better to use grep in the beginning, because it will be faster. 
+
+-------------------------------------------------
+kubectl logs multi-app -c app -n logs --previous --tail=100
+It shows the last 100 lines of logs from the previous instance of the app container inside the multi-app Pod in the logs namespace. The --previous flag is useful when the container restarted and you want to see the logs from the crashed run.
