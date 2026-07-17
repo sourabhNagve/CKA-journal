@@ -26,3 +26,35 @@ egrep "a+" file.txt # search for one or more occurrences of 'a' in a file, no ne
 -------------------------------------------------
 kubectl logs multi-app -c app -n logs --previous --tail=100
 It shows the last 100 lines of logs from the previous instance of the app container inside the multi-app Pod in the logs namespace. The --previous flag is useful when the container restarted and you want to see the logs from the crashed run.
+
+--------------------------------
+# check control plane certificate expiry
+kubeadm certs check-expiration
+# renew all certs(if expiring)
+kubeadm certs renew all
+
+
+-----------------------------------
+k get logs > file.txt 2>&1  (this will give stderr and stdout both)
+
+-----------------------------------
+command: ["sh", "-c", "echo $KEY && sleep 3600"] works because sh -c makes the shell expand $KEY and understand &&.
+
+command: ["sh", "-c", "echo $KEY && sleep 3600"] without extra quotes in YAML still works because YAML treats it as the same string value.
+
+command: ["sh", "-c", "echo $(KEY) && sleep 3600"] can work because Kubernetes expands $(KEY) before the container starts, using the value from env:.
+
+echo "$(KEY)" && sleep 3600 also works for the same reason, and the quotes just preserve the value as one string.
+
+
+
+-------------------------------------
+kubectl top pod -A --sort-by=cpu --no-headers | head -1 | awk '{print $2 "," $1}' > high_cpu_pod.txt
+--no-headers = the header line will be removed
+head -1 = will give first line of the output
+--------------------------------------
+annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+-------------------------------------
+    echo "IP_ADDRESS" > pod_ips.txt
+kubectl get pods -o wide --no-headers | awk '{print $6}' | sort -t . -k1,1n -k2,2n -k3,3n -k4,4n >> pod_ips.txt

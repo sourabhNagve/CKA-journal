@@ -1,0 +1,1 @@
+there were two service accounts in the data processing namespace, we took the analyser sa by looking into the deloyment 

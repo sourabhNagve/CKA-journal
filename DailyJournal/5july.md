@@ -1,0 +1,1 @@
+kubectl get events shows the cluster’s recent event records — short messages about things that happened to pods, nodes, deployments, and other resources, such as scheduling, image pulls, restarts, warnings, and errors.

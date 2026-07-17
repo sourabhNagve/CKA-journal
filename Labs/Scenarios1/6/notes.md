@@ -1,0 +1,1 @@
+service only include ready pods endpoints

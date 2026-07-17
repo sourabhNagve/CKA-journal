@@ -47,3 +47,13 @@ kubectl config set-credentials alice --client-certificate=alice.crt --client-key
 kubectl config set-context alice-context --cluster=kubernetes --user=alice
 kubectl config use-context alice-context
 
+
+
+-------------------------------------------------------
+
+kubeadm certs check-expiration
+kubeadm certs renew all
+sudo systemctl restart kubelet (to let the cluster use the new updated certificates) 
+
+Note: if you renew the CA you must renew all the other certificates.
+

@@ -1,5 +1,5 @@
 
- - Run kubectl describe pod <name> first — the Events section reveals 80% of issues. Then kubectl logs <name> --previous if the container crashed
+ - Run kubectl describe pod <name> first — the Events section reveals mostof issues. Then kubectl logs <name> --previous if the container crashed
 - If the node is not in ready state, then ssh to the node and systemctl status kubelet, if stopped, run systemctl restart kubelet. Then journalctl -u kubelet (common causes disk pressure df-h or memory pressure free -m or expired certificates)
 ---------CRASHLOOPBACKOFF------
 Reasons a pod goes into the crashloopbackoff are:
