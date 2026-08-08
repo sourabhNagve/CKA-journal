@@ -47,3 +47,12 @@ Scheduler not running	Bad static pod manifest	Fix /etc/kubernetes/manifests/kube
 
 
 kubectl get events -n <ns> --sort-by='.lastTimestamp'
+
+
+netstat -tlnp
+
+----------
+OOM kills: memory limits too low
+CPU Throttling: limits too restrictive
+failed scheduling: requests exceeds node capacity.
+Node pressure: too many pods consuming resources.

@@ -1,0 +1,1 @@
+you have to apply another policy for the egress for the frontend pods also , other wise traffic wont reach.

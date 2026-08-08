@@ -57,3 +57,30 @@ sudo systemctl restart kubelet (to let the cluster use the new updated certifica
 
 Note: if you renew the CA you must renew all the other certificates.
 
+
+
+-------------------------------------------------------------
+k config get-contexts --kubeconfig=/opt/course/1/kubeconfig -o name
+- will give you the  name of the context for that particular kubeconfig
+ k config view --kubeconfig /opt/course/1/kubeconfig -o jsonpath='{.users[?(@.name == "account-0027")].user.client-certificate-data}' --raw | base64 -d 
+
+ ------------------------
+ if any certificate is deleted mistakenly
+- sudo kubeadm init phase certs apiserver
+ subcommand of kubeadm that regenerates only the API server certificate and key for an existing control‑plane node, without re‑initializing the whole cluster
+ 
+- sudo systemctl restart kubelet.service
+--------------------------------------------------
+
+openssl genrsa -out server.key 2048
+openssl req -new -key server.key -out server.csr
+openssl req  -noout -text -in ./server.csr (verify the csr)
+openssl x509  -noout -text -in ./server.crt (verify the cert)
+
+
+.key --- is the private keys
+.crt or .pem are the certs 
+.pub -- public keys
+
+cert-manager
+it is a operator that manages tls certificates automatically, it extends kubernetes by adding several crds that allow you to define certificates issuers and other certificate related resources decalaratively.

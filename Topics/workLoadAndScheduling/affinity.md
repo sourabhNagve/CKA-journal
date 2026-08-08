@@ -32,3 +32,12 @@ Valid distributions:
 Invalid distributions:
 - Domain A: 5, Domain B: 2 ❌ (difference = 3, exceeds maxSkew)
 - Domain A: 7, Domain B: 0 ❌ (violates minDomains: 2)
+
+
+----------------------------------------------------
+requiredDuringSchedulingIgnoredDuringExecution (hard requirement)
+- pod must be placed on nodes matching the rules otherwise they will be in pending state.
+- similar to nodeselector but it is more expressive.
+preferredDuringSchedulingIgnoredDuringExecution (preference)
+- scheduler prefers node matching the rules, if not matching node exits, pod can still be scheduled.
+** weight: 50 in preferred NodeAffinity only influences scoring and cannot ensure equal pod distribution, use topologySpreadConstraints with maxSkew: 1 for guaranteed even spreading.

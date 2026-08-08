@@ -29,3 +29,11 @@ Why do this?
 Backend pods don't need to handle TLS certificates
 Ingress handles all security centrally
 Backend apps stay simple (just HTTP)
+
+
+
+Note*  ingress class is cluster scoped
+ingress is namespaced
+
+
+curl -k -v https://heroes.ua-academy.com/register | jq

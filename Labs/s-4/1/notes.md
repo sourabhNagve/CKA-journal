@@ -1,0 +1,1 @@
+Crucial Nuance: PDBs only protect against voluntary evictions. They cannot protect against involuntary disruptions like a hardware failure, a kernel panic, or an out-of-memory crash.
