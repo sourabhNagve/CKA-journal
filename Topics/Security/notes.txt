@@ -1,6 +1,0 @@
-🎓 Advanced Topics to Explore
-Projected Volume Tokens: Automatically mounted tokens in pods
-OIDC Authentication: Integrating external identity providers
-Webhook Token Authentication: Custom authentication mechanisms
-Admission Controllers: Enforcing RBAC policies at admission time
-Pod Security Admission: Restricting pod capabilities based on security context

@@ -1,0 +1,1 @@
+probes fails if the image is built on some port and you use wrong ports in the yaml
