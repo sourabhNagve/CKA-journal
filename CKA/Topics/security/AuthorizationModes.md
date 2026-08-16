@@ -1,74 +1,105 @@
-Authorization determines whether a user, service account, or system component has the permission to perform a specific action (verb) on a specific resource within the cluster.
+# Authorization
 
-⚙️ Authorization Modes
-Kubernetes supports several authorization modes, which are configured in the kube-apiserver static pod manifest via the --authorization-mode flag.
+**Authorization** determines whether a user, ServiceAccount, or system component has permission to perform a specific **verb** on a specific **resource** in the cluster.
 
-Node
+## Authorization Modes
 
-Purpose: Special-purpose authorizer strictly for kubelets.
+Configured in the kube-apiserver using:
 
-Scope: Limited to node-specific operations.
+    --authorization-mode
 
-Security: Restricts kubelet access so they can only read/write resources (like Pods, ConfigMaps, Secrets) tied to the specific node they are running on.
+### Node
 
-RBAC (Role-Based Access Control)
+- Special-purpose authorizer for **kubelets**.
+- Restricts kubelet access to resources related to the node it runs on.
+- Example: kubelet on `node-1` can access Pods assigned to `node-1`.
 
-Purpose: The primary authorization mode for most Kubernetes clusters.
+### RBAC
 
-Scope: Controls access using Roles/RoleBindings (Namespace-scoped) and ClusterRoles/ClusterRoleBindings (Cluster-scoped).
+- Primary authorization method in most Kubernetes clusters.
+- Uses **Roles/RoleBindings** and **ClusterRoles/ClusterRoleBindings**.
+- Provides fine-grained control over resources and verbs such as `get`, `list`, `create`, and `delete`.
 
-Security: Provides fine-grained control over specific API resources and verbs (e.g., get, list, create, delete).
+### Webhook
 
-Webhook
+- Delegates authorization decisions to an external service.
+- Useful for custom authorization policies.
 
-Purpose: Delegates authorization decisions to an external REST service.
+### AlwaysDeny
 
-Scope: Highly customizable based on external policies (e.g., Open Policy Agent).
+- Denies every request.
+- Mainly useful for testing or emergency lockdowns.
 
-AlwaysDeny
+### AlwaysAllow
 
-Purpose: Denies all requests.
+- Allows every request without authorization checks.
+- Useful only for local/testing environments.
+- **Not safe for production.**
 
-Use Case: Emergency lockdowns, testing, or demonstrations. Never used as the primary mode.
+## Authorization Evaluation
 
-AlwaysAllow
+When multiple modes are configured:
 
-Purpose: Allows all requests without checking.
+    --authorization-mode=Node,RBAC,Webhook
 
-Use Case: Local testing only. ⚠️ Unsafe for production as it bypasses all security checks.
+Kubernetes checks them in the configured order.
 
-🔄 The Evaluation Sequence (Why Order Matters)
-When multiple modes are defined (e.g., --authorization-mode=Node,RBAC,Webhook), the sequence is critical. The API server checks the modes in the exact order they are listed.
+The important concept is:
 
-The flow uses a "short-circuit" logic—the first mode that can decisively answer wins:
+    Request
+      ↓
+    Node
+      ↓
+    RBAC
+      ↓
+    Webhook
 
-If a mode ALLOWS the request → The request is approved immediately (later modes are ignored).
+A mode can:
 
-If a mode DENIES the request → The request is rejected immediately.
+- **Allow** → request is approved.
+- **Deny** → request is rejected.
+- **No opinion** → Kubernetes checks the next authorizer.
 
-If a mode HAS NO OPINION → Kubernetes moves to the next mode in the list.
+## Examples
 
-📖 Real-World Examples
-1. Node Authorizer (Kubelet Access)
-Scenario A (Allow): A kubelet on node-1 requests the Pod object for a pod scheduled on node-1. The Node authorizer allows it because the resource belongs to that node.
+### Node Authorizer
 
-Scenario B (Deny): The same kubelet tries to read a Secret used by a pod on node-2. The Node authorizer denies it because node-1 does not need that secret to function.
+Kubelet on `node-1` requests a Pod running on `node-1`:
 
-2. RBAC Authorizer (Developer Access)
-Scenario A (Allow): A developer runs kubectl get pods. The Node authorizer has no opinion (since this isn't a kubelet request), so it passes to RBAC. The developer's RoleBinding permits read access, so RBAC allows it.
+    Node → Allow
 
-Scenario B (Deny): The developer tries to delete a deployment, but their Role only has get and list verbs. RBAC denies the request immediately.
+Kubelet on `node-1` tries to access resources belonging to `node-2`:
 
-3. Webhook Authorizer (Custom Policy)
-Scenario: A user requests to create a pod. Neither Node nor RBAC explicitly denies it, but RBAC allows it. However, the cluster requires a Webhook to enforce a specific policy (e.g., "pods can only be created during business hours").
+    Node → Deny
 
-Result: The request is sent to the external policy service, which makes the final allow/deny decision based on the time of day.
+### RBAC
 
-💡 TL;DR Cheat Sheet
-The Flow: First one that can answer wins.
+Developer runs:
 
-Node: Kubelet-specific access.
+    kubectl get pods
 
-RBAC: Standard access via Roles and Bindings.
+If their Role allows `get`:
 
-Webhook: External custom policies.
+    RBAC → Allow
+
+If their Role only allows `get` and `list` and they run:
+
+    kubectl delete deployment app
+
+    RBAC → Deny
+
+### Webhook
+
+A cluster can delegate authorization to an external policy service for custom rules that Kubernetes RBAC does not provide.
+
+## Cheat Sheet
+
+    Node      → Kubelet-specific authorization
+    RBAC      → Roles and bindings
+    Webhook   → External/custom authorization
+    AlwaysDeny → Deny everything
+    AlwaysAllow → Allow everything
+
+**Remember:** Authorization answers the question:
+
+> "Is this identity allowed to perform this action on this resource?"

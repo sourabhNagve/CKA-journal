@@ -25,53 +25,48 @@ It keeps applications loosely coupled to Kubernetes while still providing useful
 
 Useful for small and simple values.
 
-```yaml
-env:
-  - name: POD_NAME
-    valueFrom:
-      fieldRef:
-        fieldPath: metadata.name
+    env:
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
 
-
-Mounted Files
+### Mounted Files
 
 Useful for labels, annotations, or other metadata that is better consumed as files.
-volumes:
-  - name: podinfo
-    downwardAPI:
-      items:
-        - path: "labels"
-          fieldRef:
-            fieldPath: metadata.labels
 
-fieldRef vs resourceFieldRef
-Pod identity / metadata
-        ↓
-    fieldRef
+    volumes:
+      - name: podinfo
+        downwardAPI:
+          items:
+            - path: labels
+              fieldRef:
+                fieldPath: metadata.labels
 
-Container resources
-        ↓
-resourceFieldRef
+## fieldRef vs resourceFieldRef
 
-Metadata as files
-        ↓
-downwardAPI volume
+| Type | Used For |
+|---|---|
+| `fieldRef` | Pod/metadata information |
+| `resourceFieldRef` | Container resource information |
+| `downwardAPI` volume | Exposing metadata as files |
 
+## Divisor
 
-Divisor
+`divisor` is used with `resourceFieldRef`.
 
-In the Downward API, divisor is used with resourceFieldRef.
-
-It controls the unit in which a container resource amount is exposed to the application.
+It controls the unit in which a resource amount is exposed to the application.
 
 For example, CPU can be exposed in cores or millicores depending on the divisor.
-Resource amount
-      ↓
-   Divisor
-      ↓
-Value exposed to application
 
-Remember
-fieldRef          → Pod/metadata information
-resourceFieldRef → Container resource information
-downwardAPI       → Expose metadata through a volume
+    Resource amount
+          ↓
+       Divisor
+          ↓
+    Value exposed to application
+
+## Remember
+
+    fieldRef          → Pod/metadata information
+    resourceFieldRef  → Container resource information
+    downwardAPI       → Expose metadata through a volume

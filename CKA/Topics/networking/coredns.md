@@ -1,17 +1,63 @@
-i got a problem,made a replicaset and tried to lookup the kubernetes service from inside the pod, but it wasnt working.
-- nslookup kubernetes.default
-it didnt work, so there is problem with the dns
-- ping <kubernetes service ip>
-it didnt work again the same 
-- curl <service name> (service name wasnt resolving)
-none of them worked, 
-so i checked the coredns pods were fine, the kubedns service was fine.
-corefile was okay
-still the issue
-now whether the kubedns service  didnt have any endpoints , there was wrong labels in the service file of the kubedns service.
-corrected it and the endpoints were there again and the problem got solved.
+# DNS Troubleshooting
 
-kubectl get pods -n kube-system -l k8s-app=kube-dns
-kubectl get svc -n kube-system kube-dns
-kubectl get endpoints -n kube-system kube-dns
-kubectl logs -n kube-system -l k8s-app=kube-dns --tail=50
+I created a ReplicaSet and tried to resolve the Kubernetes service from inside the Pod:
+
+    nslookup kubernetes.default
+
+It failed, indicating a possible DNS issue.
+
+I then checked:
+
+    ping <kubernetes-service-ip>
+
+This also failed.
+
+And:
+
+    curl <service-name>
+
+The service name was not resolving either.
+
+## Troubleshooting Steps
+
+First, check whether the CoreDNS Pods are running:
+
+    kubectl get pods -n kube-system -l k8s-app=kube-dns
+
+Check the CoreDNS Service:
+
+    kubectl get svc -n kube-system kube-dns
+
+Check whether the Service has endpoints:
+
+    kubectl get endpoints -n kube-system kube-dns
+
+Check CoreDNS logs:
+
+    kubectl logs -n kube-system -l k8s-app=kube-dns --tail=50
+
+## Root Cause
+
+The CoreDNS Pods were healthy, the `kube-dns` Service existed, and the CoreDNS configuration was correct.
+
+The problem was that the `kube-dns` Service had **no endpoints**.
+
+The Service had incorrect labels/selectors, so it was not selecting the CoreDNS Pods.
+
+After correcting the labels, the endpoints appeared and DNS resolution started working again.
+
+## Key Lesson
+
+A DNS issue does not always mean CoreDNS itself is broken.
+
+Check the full path:
+
+    Pod
+      ↓
+    kube-dns Service
+      ↓
+    Endpoints
+      ↓
+    CoreDNS Pods
+
+If the `kube-dns` Service has no endpoints, DNS requests cannot reach CoreDNS.

@@ -27,13 +27,6 @@ egrep "a+" file.txt # search for one or more occurrences of 'a' in a file, no ne
 kubectl logs multi-app -c app -n logs --previous --tail=100
 It shows the last 100 lines of logs from the previous instance of the app container inside the multi-app Pod in the logs namespace. The --previous flag is useful when the container restarted and you want to see the logs from the crashed run.
 
---------------------------------
-# check control plane certificate expiry
-kubeadm certs check-expiration
-# renew all certs(if expiring)
-kubeadm certs renew all
-
-
 -----------------------------------
 k get logs > file.txt 2>&1  (this will give stderr and stdout both)
 
@@ -62,13 +55,6 @@ kubectl get pods -o wide --no-headers | awk '{print $6}' | sort -t . -k1,1n -k2,
 
 
 suppose i wanna put a static pod in the worker node how do i do that
-7 - CKA exam Q7 with Solution... Kubernetes: Create static ... trailer
-7 - CKA exam Q7 with Solution... Kubernetes: Create static ...
-Static Pod in kubernetes trailer
-Static Pod in kubernetes
-Day 13/40 - Static Pods, Manual Scheduling, Labels, and ... trailer
-Day 13/40 - Static Pods, Manual Scheduling, Labels, and ...
-Yes — on a worker node, you create a static pod by placing a Pod manifest file in the kubelet’s static pod directory, and the kubelet on that node will start it automatically. Static pods are managed directly by kubelet on that specific node, not by the scheduler or API server.
 
 How to do it
 SSH into the worker node.

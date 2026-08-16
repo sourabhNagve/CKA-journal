@@ -1,39 +1,61 @@
 # Ingress Controller
-- a k8s component (usually nginx) that acts as the entry point for external traffic
-- runs as pod or deployment in cluster.
-it recieves https request from the user
-read host and path from the request
-loks for ingress resource that matches
 
-# TLS termination
+An **Ingress Controller** is a Kubernetes component that acts as an entry point for external HTTP/HTTPS traffic.
 
-TLS Termination:
+- Usually runs as a Pod/Deployment in the cluster.
+- Receives HTTP/HTTPS requests from users.
+- Reads the **host and path** from the request.
+- Finds the matching **Ingress** resource.
+- Routes the request to the appropriate backend Service.
 
-Ingress decrypts HTTPS traffic
-Forwards HTTP to backend services
-Services don't need TLS certificates
+## TLS Termination
 
+With TLS termination, the **Ingress Controller handles HTTPS encryption/decryption** instead of the backend applications.
 
-a kubernetes secret containing tls cert and private key.
-What happens:
-Before TLS Termination:
-  HTTPS (encrypted) → User → Ingress
-After TLS Termination:
-  HTTP (decrypted) → Ingress → Backend
-Process:
-Ingress controller uses the certificate from ua-heroes-tls secret
-Decrypts the HTTPS request
-Now has plain HTTP: GET /register
-Backend services receive unencrypted HTTP (simpler for them)
-Why do this?
-Backend pods don't need to handle TLS certificates
-Ingress handles all security centrally
-Backend apps stay simple (just HTTP)
+    User
+      │
+      │ HTTPS (encrypted)
+      ▼
+    Ingress
+      │
+      │ HTTP (decrypted)
+      ▼
+    Backend Service
 
+The Ingress Controller uses a Kubernetes **TLS Secret** containing:
 
+- TLS certificate
+- Private key
 
-Note*  ingress class is cluster scoped
-ingress is namespaced
+For example:
 
+    ua-heroes-tls
 
-curl -k -v https://heroes.ua-academy.com/register | jq
+### What Happens?
+
+1. User sends an HTTPS request.
+2. Ingress receives the encrypted request.
+3. Ingress uses the certificate from the TLS Secret.
+4. Ingress decrypts the request.
+5. Ingress forwards the request as HTTP to the backend Service.
+
+Backend Pods therefore do not need to manage TLS certificates themselves.
+
+### Why Use TLS Termination?
+
+- Centralizes TLS handling at the Ingress.
+- Backend applications can use simple HTTP.
+- Certificates don't need to be configured in every backend application.
+
+## Resource Scope
+
+    IngressClass → Cluster-scoped
+    Ingress      → Namespace-scoped
+
+## Testing
+
+    curl -k -v https://heroes.ua-academy.com/register | jq
+
+- `-k` → Ignore certificate verification.
+- `-v` → Show detailed request/response information.
+- `| jq` → Format JSON output.

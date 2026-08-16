@@ -1,8 +1,47 @@
-when you create the service with a selector, k8s watches for pods whosse labels match that selector and populates the endpoints slices object with their ips and ports. If no pods match or the pods ar enot ready, the endpoints list can be empty and the service will have nothing usable to send traffic to.
+# Services and Endpoints
 
+When you create a Service with a **selector**, Kubernetes looks for Pods whose labels match that selector and populates **EndpointSlices** with their IP addresses and ports.
 
-The real traffic path is:
-Service DNS or ClusterIP -> node networking rules via kube-proxy -> one of the IPs in Endpoints -> Pod. So Endpoints are not a “middlebox” carrying traffic; they are the backend address book that kube-proxy reads to decide where packets go
+If no Pods match the selector, or the matching Pods are not ready, the EndpointSlice can have no usable endpoints and the Service has nowhere to send traffic.
 
-if you wanna give a different clusterip to teh service there is a feature in k8s which allows you do add a new servicecidr without doing changes in the api server,
-you make a new servicecidr with the servicecidr object and then you make a service, you have to manaually enter the ip from the new servicecidr inorder for the service to take it and then it will work.
+## Traffic Flow
+
+The actual traffic path is:
+
+    Service DNS / ClusterIP
+            ↓
+       kube-proxy
+            ↓
+      EndpointSlice
+            ↓
+       Pod IP:Port
+
+EndpointSlices are **not a middlebox** that carries traffic. They act as the backend address book that Kubernetes networking uses to determine where Service traffic should go.
+
+## Multiple Service CIDRs
+
+Kubernetes supports adding an additional Service CIDR using the `ServiceCIDR` API.
+
+This allows Services to receive ClusterIPs from an additional address range without changing the existing API server configuration.
+
+The general flow is:
+
+    1. Create a new ServiceCIDR.
+    2. Create a Service.
+    3. Manually specify a ClusterIP from the new ServiceCIDR.
+    4. Kubernetes assigns that IP to the Service.
+
+Example:
+
+    apiVersion: networking.k8s.io/v1
+    kind: ServiceCIDR
+    metadata:
+      name: new-service-cidr
+    spec:
+      cidrs:
+        - 10.100.0.0/16
+
+Then a Service can explicitly request an IP from that range:
+
+    spec:
+      clusterIP: 10.100.0.10

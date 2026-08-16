@@ -1,76 +1,127 @@
-# gateway api offers more expressive, extensible and role-oriented api for managing traffic routing.
-components are:
+# Gateway API
 
-- GatewayClass
-Defines the type of Gateway controller (e.g., NGINX, Istio, Envoy)
-Cluster-scoped resource
-Similar to StorageClass or IngressClass
+The **Gateway API** provides a more expressive, extensible, and role-oriented way to manage traffic routing in Kubernetes.
 
-- Gateway
-Defines the infrastructure (load balancer, listeners)
-Specifies protocols, ports, TLS configuration
-Can be shared across multiple routes
-Namespace-scoped
+## Main Components
 
-- httpRoute
+### GatewayClass
 
-Defines HTTP traffic routing rules
-Path-based routing, header matching, query parameters
-References backend Services
-Namespace-scoped
+Defines the type of Gateway controller, such as NGINX, Istio, or Envoy.
 
+- Cluster-scoped
+- Similar to `StorageClass` or `IngressClass`
+- Usually managed by a cluster administrator
 
-- ReferenceGrant
+### Gateway
 
-Enables cross-namespace references
-Security control for service access
-Allows HTTPRoute in one namespace to reference Services in another
+Defines the actual gateway infrastructure and listeners.
 
-Diagram:
-Internet Traffic (HTTPS)
+- Namespace-scoped
+- Defines ports and protocols
+- Can configure TLS
+- Can be shared by multiple Routes
+
+### HTTPRoute
+
+Defines HTTP traffic-routing rules.
+
+- Namespace-scoped
+- Supports path, header, and query-parameter matching
+- References backend Services
+- Usually managed by application developers
+
+### ReferenceGrant
+
+Controls which resources can be referenced across namespaces.
+
+- Namespace-scoped
+- Used to allow specific cross-namespace references
+- Prevents arbitrary cross-namespace access
+
+## Traffic Flow
+
+    Internet Traffic (HTTPS)
+             ↓
+         [Gateway]
+       TLS Termination
+             ↓
+        [HTTPRoute]
+       Routing Rules
+             ↓
+       ┌─────┬──────┬──────────┐
+       │     │      │          │
+    /available /books /travellers
+       │     │      │          │
+       ↓     ↓      ↓          ↓
+    [Service][Service][Service]
+       │     │      │
+       ↓     ↓      ↓
+     [Pods] [Pods] [Pods]
+
+## Roles
+
+    Cluster Admin
          ↓
-    [Gateway]
-    (TLS Termination)
+    GatewayClass
+    (Which controller?)
+
+    Platform / Namespace Admin
          ↓
-    [HTTPRoute]
-    (Path-based Routing)
+    Gateway
+    (Gateway infrastructure)
+
+    Application Developer
          ↓
-    ┌────────┬──────────┬──────────┐
-    │        │          │          │
-/available  /books  /travellers
-    │        │          │          │
-    ↓        ↓          ↓          ↓
-[Service]  [Service]  [Service]
-available   books    travellers
-    │        │          │          │
-    ↓        ↓          ↓          ↓
-[Pods]     [Pods]     [Pods]
+    HTTPRoute / GRPCRoute / TCPRoute
+    (Traffic routing)
 
-Cluster admin → manages GatewayClass (defines the controller, e.g. NGINX, Envoy)
+---
 
-Namespace admin / operator → manages Gateway (an actual gateway instance)
+## HTTPRoute Traffic Mirroring
 
-App developer → manages routes like HTTPRoute, GRPCRoute, TCPRoute
+**HTTPRoute mirroring** sends a copy of incoming requests to a secondary backend while the primary backend continues handling the real response.
 
+### What It Does
 
+- Primary backend handles the actual response.
+- Mirrored backend receives a best-effort copy of the request.
+- The mirrored response is ignored.
 
-------------------------------------------------------------------------------
-HTTPRoute mirroring means sending a copy of incoming requests to a second backend for testing or observation, while the client still gets the response from the main backend.
+### Why Use It?
 
-What it does
-The primary backend handles the real response.
+- Test a new version without affecting users.
+- Compare behavior, logs, or performance.
+- Validate a new service before shifting real traffic.
 
-The mirrored backend receives a best-effort copy of the request.
+    Client
+      │
+      ├──────────────→ Primary Backend
+      │                    ↓
+      │                 Response
+      │
+      └─── copy ──────→ Mirror Backend
+                           ↓
+                      Response ignored
 
-The mirrored response is ignored by the Gateway.
+---
 
-Why use it
-Test a new version in production without affecting users.
+## ReferenceGrant
 
-Compare behavior, logs, or performance of a canary service.
+Use a **ReferenceGrant** when a Gateway API resource needs to reference an allowed resource in another namespace.
 
-Validate changes before shifting real traffic.
+For example:
 
+    HTTPRoute (namespace A)
+             ↓
+       ReferenceGrant
+             ↓
+    Service (namespace B)
 
-------------------------------------------
-You use a ReferenceGrant in the Kubernetes Gateway API when you need to allow cross‑namespace references between Gateway API objects (Routes, Gateways, Secrets, Services, etc.).
+The ReferenceGrant provides an explicit permission for the cross-namespace reference.
+
+### Remember
+
+    GatewayClass → Defines the Gateway controller
+    Gateway      → Defines the Gateway infrastructure
+    HTTPRoute    → Defines traffic routing
+    ReferenceGrant → Allows specific cross-namespace references

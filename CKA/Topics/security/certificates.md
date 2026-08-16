@@ -1,86 +1,178 @@
-Kubernetes does not typically support creating users as in Linux. Instead, users are not stored as in-cluster objects. A user is authenticated through an external identity mechanism, and one common method is to use client certificates. Access is then authorized through RBAC.
+# Kubernetes Users and Certificates
 
-The username is usually taken from the certificate subject, such as the Common Name. The certificate identifies the user to the API server. Authorization is controlled by Roles and RoleBindings, not by a Kubernetes user record, because Kubernetes does not maintain one.
+Kubernetes does not typically create users as Linux does. **Users are not stored as Kubernetes objects.**
 
-Q create a k8s user
-- generate a key and cert request using openssl commands
-- get the certificate signed by a trusted CA (in k8s we use the certificate signing request object mostly)
-- put that cert into the kubeconfig
-- and attach the RBAC rules to the permission
+Instead:
 
-Example: creating a client certificate for alice
-# generate the private key 
-openssl genrsa -out alice.key 2048
-# get the csr file
-openssl req -new -key alice.key -out alice.csr -subj "/CN=alice/O=devs"
-# You can also create a Kubernetes CSR object using the base64-encoded contents of alice.csr
+- A user is authenticated through an external identity mechanism.
+- One common method is **client certificates**.
+- The username can come from the certificate subject, such as the `Common Name (CN)`.
+- Authorization is then handled by **RBAC** using Roles and RoleBindings.
 
-cat alice.csr | base64 -w 0 
+## Create a Kubernetes User with a Client Certificate
 
-apiVersion: certificates.k8s.io/v1
-kind: CertificateSigningRequest
-metadata:
-  name: alice
-spec:
-  request: <base64-encoded-csr-content>
-  signerName: kubernetes.io/kube-apiserver-client
-  expirationSeconds: 86400
-  usages:
-  - client auth
+The general process is:
 
-#
-kubectl apply -f alice-csr.yaml
-kubectl certificate approve alice
+    Generate private key
+          ↓
+    Generate CSR
+          ↓
+    Get CSR signed by a trusted CA
+          ↓
+    Add certificate to kubeconfig
+          ↓
+    Grant permissions using RBAC
 
-# retrieve the signed cert
-kubectl get csr alice -o jsonpath='{.status.certificate}' | base64 --decode > alice.crt
+### 1. Generate the Private Key
 
-# check the certificate using:
-openssl x509 -in alice.crt -text -noout
+    openssl genrsa -out alice.key 2048
 
-# Using the certificate
-# To authenticate to the API server with the certificate:
-kubectl --certificate-authority=ca.crt --client-certificate=alice.crt --client-key=alice.key get pods
+### 2. Generate the CSR
 
-# To add this to the kubeconfig:
-kubectl config set-credentials alice --client-certificate=alice.crt --client-key=alice.key
-kubectl config set-context alice-context --cluster=kubernetes --user=alice
-kubectl config use-context alice-context
+    openssl req -new -key alice.key -out alice.csr -subj "/CN=alice/O=devs"
 
+`CN=alice` → username  
+`O=devs` → group
 
+### 3. Create a Kubernetes CertificateSigningRequest
 
--------------------------------------------------------
+Encode the CSR:
 
-kubeadm certs check-expiration
-kubeadm certs renew all
-sudo systemctl restart kubelet (to let the cluster use the new updated certificates) 
+    cat alice.csr | base64 -w 0
 
-Note: if you renew the CA you must renew all the other certificates.
+Create `alice-csr.yaml`:
 
+    apiVersion: certificates.k8s.io/v1
+    kind: CertificateSigningRequest
+    metadata:
+      name: alice
+    spec:
+      request: <base64-encoded-csr-content>
+      signerName: kubernetes.io/kube-apiserver-client
+      expirationSeconds: 86400
+      usages:
+        - client auth
 
+Apply and approve it:
 
--------------------------------------------------------------
-k config get-contexts --kubeconfig=/opt/course/1/kubeconfig -o name
-- will give you the  name of the context for that particular kubeconfig
- k config view --kubeconfig /opt/course/1/kubeconfig -o jsonpath='{.users[?(@.name == "account-0027")].user.client-certificate-data}' --raw | base64 -d 
+    kubectl apply -f alice-csr.yaml
+    kubectl certificate approve alice
 
- ------------------------
- if any certificate is deleted mistakenly
-- sudo kubeadm init phase certs apiserver
- subcommand of kubeadm that regenerates only the API server certificate and key for an existing control‑plane node, without re‑initializing the whole cluster
- 
-- sudo systemctl restart kubelet.service
---------------------------------------------------
+### 4. Retrieve the Signed Certificate
 
-openssl genrsa -out server.key 2048
-openssl req -new -key server.key -out server.csr
-openssl req  -noout -text -in ./server.csr (verify the csr)
-openssl x509  -noout -text -in ./server.crt (verify the cert)
+    kubectl get csr alice \
+      -o jsonpath='{.status.certificate}' | base64 --decode > alice.crt
 
+Check the certificate:
 
-.key --- is the private keys
-.crt or .pem are the certs 
-.pub -- public keys
+    openssl x509 -in alice.crt -text -noout
 
-cert-manager
-it is a operator that manages tls certificates automatically, it extends kubernetes by adding several crds that allow you to define certificates issuers and other certificate related resources decalaratively.
+## Use the Certificate
+
+You can authenticate directly using:
+
+    kubectl \
+      --certificate-authority=ca.crt \
+      --client-certificate=alice.crt \
+      --client-key=alice.key \
+      get pods
+
+Or add the credentials to kubeconfig:
+
+    kubectl config set-credentials alice \
+      --client-certificate=alice.crt \
+      --client-key=alice.key
+
+    kubectl config set-context alice-context \
+      --cluster=kubernetes \
+      --user=alice
+
+    kubectl config use-context alice-context
+
+After authentication, use **RBAC** to grant Alice permissions.
+
+---
+
+# Kubernetes Certificate Management
+
+Check certificate expiration:
+
+    kubeadm certs check-expiration
+
+Renew Kubernetes certificates:
+
+    kubeadm certs renew all
+
+Restart kubelet when required:
+
+    sudo systemctl restart kubelet
+
+**Note:** If the Kubernetes CA itself is renewed, the certificates signed by that CA also need to be renewed/reissued.
+
+## Inspect a Certificate
+
+    openssl x509 -noout -text -in server.crt
+
+Inspect a CSR:
+
+    openssl req -noout -text -in server.csr
+
+Generate a private key:
+
+    openssl genrsa -out server.key 2048
+
+Generate a CSR:
+
+    openssl req -new -key server.key -out server.csr
+
+### File Extensions
+
+    .key       → Private key
+    .crt/.pem  → Certificate
+    .pub       → Public key
+
+---
+
+# Useful Kubeconfig Commands
+
+List contexts from a specific kubeconfig:
+
+    kubectl config get-contexts \
+      --kubeconfig=/opt/course/1/kubeconfig \
+      -o name
+
+Extract a user's client certificate from kubeconfig:
+
+    kubectl config view \
+      --kubeconfig=/opt/course/1/kubeconfig \
+      -o jsonpath='{.users[?(@.name == "account-0027")].user.client-certificate-data}' \
+      --raw | base64 -d
+
+---
+
+# Regenerate a Deleted API Server Certificate
+
+If the API server certificate is accidentally deleted:
+
+    sudo kubeadm init phase certs apiserver
+
+This regenerates the API server certificate and key for the existing control-plane node without reinitializing the entire cluster.
+
+Then restart kubelet:
+
+    sudo systemctl restart kubelet.service
+
+---
+
+# cert-manager
+
+**cert-manager** is a Kubernetes operator that automates TLS certificate management.
+
+It extends Kubernetes with CRDs that allow you to declaratively define:
+
+- Certificates
+- Issuers
+- ClusterIssuers
+- Certificate-related configuration
+
+It can automatically request, renew, and manage certificates.
