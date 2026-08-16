@@ -1,8 +1,30 @@
-# kubernetes doesnt have way of explicitly creating users like in linux
-- we dont create a user object inside the cluster.
-- Instead a user is authenticated through an external identity method
-- one way is using the client certificates and then grant permission with RBAC.
-- The username comes from the certificate's subject such as common name
-- the certificate identify the user to the api server
-- last the access is controlled by role and rolebindings not by kubernetes  user record(there is'nt one).
-more about this  in the official documentation: https://kubernetes.io/docs/reference/access-authn-authz/authentication/#client-certificates
+# Kubernetes Users
+
+Kubernetes does **not** have a built-in User object like Linux does.
+
+- We don't create a user record inside the Kubernetes cluster.
+- A user is authenticated through an **external identity mechanism**.
+- One common method is **client certificates**.
+- The username can come from the certificate's subject, such as the **Common Name (CN)**.
+- The certificate proves the identity of the user to the Kubernetes API server.
+- After authentication, **RBAC** controls what the user is allowed to do.
+- Permissions are granted using **Roles/ClusterRoles** and **RoleBindings/ClusterRoleBindings**, not through a Kubernetes User object.
+
+```text
+User
+  ↓
+Client Certificate
+  ↓
+Authentication
+  ↓
+Kubernetes API Server
+  ↓
+RBAC
+  ↓
+Role / ClusterRole
+  ↓
+Allowed or Denied
+
+Important
+Authentication → Who are you?
+Authorization  → What are you allowed to do?
