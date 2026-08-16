@@ -1,46 +1,191 @@
-Helm is the package manager for k8s.
-it bundles k8s yaml into reusable packages called charts, lets you install them as releases.
-it is useful when you manage same app across dev, staging and productin with different settings.
+# Helm
 
-Chart: a reusable package that contains kubernetes manifests, templates and config files like Chart.yaml, values.yaml.
-Release: one running installation of a chart in a cluster.
-Values: here you can change settings for different envs, and use the same chart with different settings.
-repo: a place to discover and fetch charts, such as public or private chart registeries.
+Helm is the package manager for Kubernetes.
 
-How Helm works:
-Helm takes templates plus values, renders them into normal kubernetes yaml. and send those resources to your cluster through the k8s api.
-This helps avoid manually maintaining many nearly identical yaml files with different environments.
+It bundles Kubernetes YAML into reusable packages called **Charts** and lets you install them as **Releases**.
 
-Basic flow:
-- install the helm cli
-- add a chart repo
-- search for the chart
-- install it into your cluster
-- customize it with values
-- Upgrade or roll back when needed.
+It is useful when you manage the same application across environments like **dev, staging, and production**, with different settings.
 
-Common commands
-helm repo add -- add a chart repo
-helo repo update -- refresh repo metadata
-helm search repo -- find charts in repo
-helm install -- install a chart as a release
-helm upgrade -- update an existing release
-helm rollback -- return to a previous release version
-helm list -- show installed releases
-helm status -- show release status
+## Key Concepts
 
--------------------------
-SET CUSTOM VALUES:
-helm instll my-nginx bitnami/nginx --set service.type=LoadBalancer --et replicaCount=2
-or
-with a file -- helm install my-nginx bitnami/nginx -f value-prod.yaml
+### Chart
 
+A reusable package containing Kubernetes manifests, templates, and configuration files such as:
 
-Upgrades or rollback.
+```text
+Chart.yaml
+values.yaml
+templates/
+```
+
+### Release
+
+One installed instance of a Chart in a Kubernetes cluster.
+
+```bash
+helm install my-nginx bitnami/nginx
+```
+
+Here:
+
+```text
+my-nginx       → release name
+bitnami/nginx  → chart reference
+```
+
+### Values
+
+Values are configuration settings used to customize a Chart for different environments.
+
+For example:
+
+```yaml
+replicaCount: 2
+```
+
+The same Chart can use different values for dev, staging, and production.
+
+### Repository
+
+A place where Helm Charts are stored and discovered.
+
+Repositories can be public or private.
+
+---
+
+## How Helm Works
+
+Helm takes:
+
+```text
+Templates + Values
+        ↓
+Rendered Kubernetes YAML
+        ↓
+Kubernetes API
+        ↓
+Resources in the cluster
+```
+
+This helps avoid maintaining many nearly identical Kubernetes YAML files for different environments.
+
+---
+
+## Basic Flow
+
+```text
+Install Helm CLI
+      ↓
+Add a Chart repository
+      ↓
+Search for a Chart
+      ↓
+Install the Chart
+      ↓
+Customize with Values
+      ↓
+Upgrade or Rollback
+```
+
+---
+
+## Common Commands
+
+```bash
+# Add a Chart repository
+helm repo add <repo-name> <repo-url>
+
+# Refresh repository metadata
+helm repo update
+
+# Search for Charts
+helm search repo <keyword>
+
+# Install a Chart as a Release
+helm install <release-name> <repo>/<chart>
+
+# Upgrade an existing Release
+helm upgrade <release-name> <repo>/<chart>
+
+# Roll back to a previous revision
+helm rollback <release-name> <revision>
+
+# List installed Releases
+helm list
+
+# Show Release status
+helm status <release-name>
+
+# Show Release history
+helm history <release-name>
+```
+
+---
+
+## Set Custom Values
+
+Using `--set`:
+
+```bash
+helm install my-nginx bitnami/nginx \
+  --set service.type=LoadBalancer \
+  --set replicaCount=2
+```
+
+Or using a values file:
+
+```bash
+helm install my-nginx bitnami/nginx -f values-prod.yaml
+```
+
+---
+
+## Upgrade and Rollback
+
+Upgrade:
+
+```bash
 helm upgrade my-nginx bitnami/nginx --set replicaCount=3
+```
+
+Check history:
+
+```bash
 helm history my-nginx
+```
+
+Roll back:
+
+```bash
 helm rollback my-nginx 1
+```
 
+---
 
-helm install my-ingress repo-name/nginx-ingress
-#           ^ release name   ^ chart reference (repo/chart)
+## Remember the Chart Reference
+
+```bash
+helm install my-nginx repo-name/nginx-ingress
+#           ↑              ↑
+#      release name    chart reference
+#                      repo/chart
+```
+
+So:
+
+```text
+my-nginx              → Release
+repo-name/nginx       → Chart
+```
+
+### Simple Mental Model
+
+```text
+Chart + Values
+      ↓
+     Helm
+      ↓
+   Release
+      ↓
+ Kubernetes
+```
