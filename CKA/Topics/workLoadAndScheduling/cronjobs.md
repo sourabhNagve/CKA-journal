@@ -1,47 +1,84 @@
-The schedule is written in cron format inside the CronJob manifest, under spec.schedule. It uses five fields:
+# Kubernetes CronJob Schedule
 
+The schedule is written in **cron format** inside the CronJob manifest, under:
 
-Examples
+```yaml
+spec:
+  schedule:
+```
+
+It uses **five fields**:
+
+```text
+* * * * *
+│ │ │ │ │
+│ │ │ │ └── Day of week
+│ │ │ └──── Month
+│ │ └────── Day of month
+│ └──────── Hour
+└────────── Minute
+```
+
+## Example
+
+```yaml
 apiVersion: batch/v1
 kind: CronJob
+
 metadata:
   name: hello
+
 spec:
   schedule: "*/5 * * * *"
+
   jobTemplate:
     spec:
       template:
         spec:
           containers:
-          - name: hello
-            image: busybox
-            command: ["sh", "-c", "date; echo hello"]
+            - name: hello
+              image: busybox
+              command: ["sh", "-c", "date; echo hello"]
+
           restartPolicy: OnFailure
+```
 
-* * * * * → every minute.
+This runs the Job **every 5 minutes**.
 
-0 * * * * → at minute 0 of every hour.
+---
 
-0 0 * * * → every day at midnight.
+## Common Examples
 
-*/5 * * * * → every 5 minutes.
+```text
+* * * * *       → Every minute
 
-0 2 * * * → every day at 2:00 AM.
+0 * * * *       → At minute 0 of every hour
 
-Easy way to read it
-The fields mean:
+0 0 * * *       → Every day at midnight
 
-first = minutes.
+*/5 * * * *     → Every 5 minutes
 
-second = hours.
+0 2 * * *       → Every day at 2:00 AM
 
-third = day of month.
+30 1 * * *      → Every day at 1:30 AM
+```
 
-fourth = month.
+## Easy Way to Read It
 
-fifth = day of week.
+```text
+Minute   Hour   Day of Month   Month   Day of Week
+  ↓       ↓          ↓           ↓          ↓
+  *       *          *           *          *
+```
 
-So if you want a job every day at 1:30 AM, you would write:
+So, if you want a Job to run **every day at 1:30 AM**:
 
+```text
 30 1 * * *
+```
 
+### Remember
+
+```text
+Minute → Hour → Day → Month → Weekday
+```
