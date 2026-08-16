@@ -1,109 +1,136 @@
-# grep commands
-grep "error" logs.txt # is case sensitive
-grep -i "error" logs.txt # is case insensitive
-grep -r "error" /var/logs/ # search recursively in a directory
+# Useful Commands & Exam Notes
 
-cat file.txt | grep "pattern" # search for a pattern in a file
-cat file.txt | grep -i "pattern" # search for a pattern in a file, case insensitive
+## grep commands
 
-egrep "pattern" file.txt # search for a pattern in a file
-egrep -i "pattern" file.txt # search for a pattern in a file, case insensitive
-egrep -r "pattern" /var/logs/ # search recursively in a directory
-egrep -i "pattern" /var/logs/ # search recursively in a directory, case insensitive
+grep "error" logs.txt
+grep -i "error" logs.txt
+grep -r "error" /var/logs/
 
-# difference between grep and egrep
-# egrep is the same as grep -E, which allows for extended regular expressions.
-# we dont need to escape special characters like +, ?, |, and () in egrep, while we do in grep.
-# example:
-grep "a\+" file.txt # search for one or more occurrences of 'a' in a file
-egrep "a+" file.txt # search for one or more occurrences of 'a' in a file, no need to escape the '+'
+- -i → case-insensitive search
+- -r → recursive search
+- -E → extended regular expressions
+- egrep is the older equivalent of grep -E
 
-# also difference between grep and egrep is that egrep is faster than grep for large files, because it uses a different algorithm for searching.  
-# Difference between grep in the beginning and grep in the middle of a pipeline is that grep in the beginning reads the entire file into memory, while grep in the middle of a pipeline reads the input line by line. 
-# so if you are searching for a pattern in a large file, it is better to use grep in the middle of a pipeline, because it will use less memory. 
-# and if you are searching for a pattern in a small file, it is better to use grep in the beginning, because it will be faster. 
+Examples:
+grep "a\+" file.txt
+grep -E "a+" file.txt
 
--------------------------------------------------
+Prefer grep -E over egrep.
+
+--------------------------------------------------
+
+## Kubernetes Logs
+
 kubectl logs multi-app -c app -n logs --previous --tail=100
-It shows the last 100 lines of logs from the previous instance of the app container inside the multi-app Pod in the logs namespace. The --previous flag is useful when the container restarted and you want to see the logs from the crashed run.
 
------------------------------------
-k get logs > file.txt 2>&1  (this will give stderr and stdout both)
+- --previous → logs from the previous container instance
+- --tail=100 → shows the last 100 lines
 
------------------------------------
-command: ["sh", "-c", "echo $KEY && sleep 3600"] works because sh -c makes the shell expand $KEY and understand &&.
+Redirect both stdout and stderr:
 
-command: ["sh", "-c", "echo $KEY && sleep 3600"] without extra quotes in YAML still works because YAML treats it as the same string value.
+kubectl logs <pod> > file.txt 2>&1
 
-command: ["sh", "-c", "echo $(KEY) && sleep 3600"] can work because Kubernetes expands $(KEY) before the container starts, using the value from env:.
+--------------------------------------------------
 
-echo "$(KEY)" && sleep 3600 also works for the same reason, and the quotes just preserve the value as one string.
+## Shell Commands in Containers
 
+Use sh -c when shell features such as variable expansion and && are required:
 
+command: ["sh", "-c", "echo $KEY && sleep 3600"]
 
--------------------------------------
+Kubernetes also supports $(VAR_NAME) expansion in command and args:
+
+command: ["sh", "-c", "echo $(KEY) && sleep 3600"]
+
+--------------------------------------------------
+
+## Find the Highest CPU Pod
+
 kubectl top pod -A --sort-by=cpu --no-headers | head -1 | awk '{print $2 "," $1}' > high_cpu_pod.txt
---no-headers = the header line will be removed
-head -1 = will give first line of the output
---------------------------------------
+
+- --no-headers → removes the header
+- head -1 → selects the first result
+- awk → extracts CPU and Pod name
+
+--------------------------------------------------
+
+## Ingress Annotation
+
 annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
--------------------------------------
-    echo "IP_ADDRESS" > pod_ips.txt
+  nginx.ingress.kubernetes.io/ssl-redirect: "false"
+
+--------------------------------------------------
+
+## Sort Pod IP Addresses
+
+echo "IP_ADDRESS" > pod_ips.txt
 kubectl get pods -o wide --no-headers | awk '{print $6}' | sort -t . -k1,1n -k2,2n -k3,3n -k4,4n >> pod_ips.txt
 
+--------------------------------------------------
 
+## Static Pod on a Worker Node
 
-suppose i wanna put a static pod in the worker node how do i do that
+Static Pods are managed directly by the kubelet on the node.
 
-How to do it
-SSH into the worker node.
+SSH into the worker node and place the Pod manifest in the kubelet's static Pod directory, commonly:
 
-Find the kubelet static pod path, usually /etc/kubernetes/manifests.
-
-Create a standard Pod YAML file in that directory, for example nginx.yaml.
-
-Save the file, and kubelet will notice it and create the pod automatically.
+/etc/kubernetes/manifests
 
 Example manifest:
 
-text
 apiVersion: v1
 kind: Pod
 metadata:
   name: static-nginx
 spec:
   containers:
-  - name: nginx
-    image: nginx
-Important detail
-A static pod is tied to the node where the manifest exists, so if you want the same static pod on another worker, you must place the manifest on that other node too. If the manifest file is deleted, kubelet removes the pod; if you try deleting the pod with kubectl, it may come back because the manifest still exists.
+    - name: nginx
+      image: nginx
 
-If the path is different
-Some clusters configure kubelet to read manifests from a different directory, controlled by the kubelet’s staticPodPath setting. In that case, use the configured path instead of the default.
+The kubelet automatically detects the manifest and starts the Pod.
 
-Would you like a step-by-step example using nginx on a worker node?
+- Static Pods are tied to the node where the manifest exists.
+- Removing the manifest causes the kubelet to remove the Pod.
+- Deleting the Pod with kubectl does not permanently remove it while the manifest exists.
+- To run the same Static Pod on another node, place the manifest on that node.
+- The static Pod directory is configurable through the kubelet configuration.
 
-until nc -z -w 2 what is this
-nc -z -w 2 is a netcat option combo used to test whether a TCP port is open without sending data, and to stop waiting after 2 seconds. In practice, it’s commonly used like nc -z -w 2 host port to quickly check connectivity.
+--------------------------------------------------
 
-What the flags mean
-nc: netcat, a network utility for TCP/UDP connections.
+## Netcat Port Check
 
--z: “zero-I/O” mode, so it only checks whether a connection can be made, without exchanging data.
-
--w 2: sets a 2-second timeout, so the command doesn’t hang if the host doesn’t respond.
-
-Example
 nc -z -w 2 192.168.1.10 8080
 
---------------------------------------------------------------------
-from local to remote
-k cp nginx(file )web(podname): -c server
-k cp ns/web:/filelocation  / 
+- nc → netcat
+- -z → check the port without sending data
+- -w 2 → 2-second timeout
 
-----------------------
-cdebug exec -it --priviledged pod/web-server 
+Useful for quickly checking whether a TCP port is reachable.
 
-------------------
---recursive - means kubectl explain will show the nested fields inside a resource, not just the top-level field names. For example, kubectl explain certificate.spec --recursive shows the fields under spec and their subfields as well
+--------------------------------------------------
+
+## Copy Files with kubectl
+
+Local → Pod:
+
+kubectl cp nginx web:/path -c server
+
+Pod → Local:
+
+kubectl cp ns/web:/filelocation .
+
+--------------------------------------------------
+
+## Debug a Pod
+
+kubectl debug -it pod/web-server --privileged
+
+--------------------------------------------------
+
+## kubectl explain
+
+Display nested fields:
+
+kubectl explain certificate.spec --recursive
+
+- --recursive → shows nested fields under the specified resource field.
